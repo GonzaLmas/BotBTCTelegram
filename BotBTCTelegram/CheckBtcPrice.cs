@@ -94,12 +94,35 @@ public class CheckBtcPrice
     {
         try
         {
-            logger.LogInformation("Sending Telegram message...");
+            logger.LogInformation("Preparing to send Telegram message...");
             var botClient = new TelegramBotClient(TelegramToken);
-            await botClient.SendMessage(ChatIdG, message);
-            //await botClient.SendMessage(ChatIdR, message);
 
-            logger.LogInformation("Telegram message sent successfully");
+            // Verificar que la variable TelegramBotToken no sea nula o vacía
+            if (string.IsNullOrEmpty(TelegramToken))
+            {
+                logger.LogError("Telegram Bot Token is null or empty. Cannot send message.");
+                return;
+            }
+
+            // Verificar que el chat ID no sea nulo
+            if (string.IsNullOrEmpty(ChatIdG))
+            {
+                logger.LogError("Chat ID is null or empty. Cannot send message.");
+                return;
+            }
+
+            logger.LogInformation("Sending Telegram message...");
+            var sendResponse = await botClient.SendMessage(ChatIdG, message);
+
+            // Verificar si el mensaje fue enviado correctamente
+            if (sendResponse != null && sendResponse.MessageId != 0)
+            {
+                logger.LogInformation("Telegram message sent successfully");
+            }
+            else
+            {
+                logger.LogError("Telegram message was not sent successfully. Response: " + sendResponse?.MessageId);
+            }
         }
         catch (Exception ex)
         {
