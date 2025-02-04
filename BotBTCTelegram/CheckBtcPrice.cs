@@ -11,7 +11,7 @@ public class CheckBtcPrice
     private static readonly HttpClient client = new HttpClient();
     private static readonly string TelegramToken = "8093848208:AAFBtwula2g4IoxGgBrihJ0-rrkGiSGEpDM";
     private static readonly string ChatIdG = "5847624767";
-    private static readonly string ChatIdR = "7275568176";
+    //private static readonly string ChatIdR = "7275568176";
     private readonly ILogger _logger;
 
     public CheckBtcPrice(ILogger<CheckBtcPrice> logger)
@@ -26,16 +26,25 @@ public class CheckBtcPrice
 
         try
         {
-            decimal currentPrice = await GetBtcPrice();
-            decimal previousPrice = await GetPreviousPriceFromBinance();
+            _logger.LogInformation("Starting to fetch BTC current price...");
+            decimal currentPrice = await GetBtcPrice(_logger); // Pasar _logger aquí
+            _logger.LogInformation($"Current BTC price fetched: {currentPrice} USD");
 
-            //if (currentPrice < previousPrice * 0.92m)
-            //    await SendTelegramMessage($"🚨 Alerta BTC: Precio bajó más del 8% 🚨\n💰 Precio actual: {currentPrice} USD\n📉 Precio anterior: {previousPrice} USD");
+            _logger.LogInformation("Starting to fetch the previous BTC price...");
+            decimal previousPrice = await GetPreviousPriceFromBinance(_logger); // Pasar _logger aquí
+            _logger.LogInformation($"Previous BTC price fetched: {previousPrice} USD");
 
+            // Compara los precios y envía el mensaje si son diferentes
             if (currentPrice != previousPrice)
-                await SendTelegramMessage($"🚨 Alerta BTC: Precio bajó más de 8% 🚨\n💰 Precio actual: {currentPrice} USD\n📉 Precio anterior: {previousPrice} USD");
+            {
+                _logger.LogInformation("BTC price changed, sending Telegram message...");
+                await SendTelegramMessage(_logger, $"🚨 Alerta BTC: Precio bajó más de 8% 🚨\n💰 Precio actual: {currentPrice} USD\n📉 Precio anterior: {previousPrice} USD");
+            }
             else
-                await SendTelegramMessage($"🚨 Alerta BTC: Precio NO bajó más de 8$ 🚨\n💰 Precio actual: {currentPrice} USD\n📉 Precio anterior: {previousPrice} USD");
+            {
+                _logger.LogInformation("BTC price did not change, sending Telegram message...");
+                await SendTelegramMessage(_logger, $"🚨 Alerta BTC: Precio NO bajó más de 8% 🚨\n💰 Precio actual: {currentPrice} USD\n📉 Precio anterior: {previousPrice} USD");
+            }
         }
         catch (Exception ex)
         {
@@ -43,28 +52,59 @@ public class CheckBtcPrice
         }
     }
 
-    static async Task<decimal> GetBtcPrice()
+    static async Task<decimal> GetBtcPrice(ILogger logger) // Acepta _logger como parámetro
     {
-        string url = "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT";
-        var response = await client.GetStringAsync(url);
-        dynamic data = JsonConvert.DeserializeObject(response);
+        try
+        {
+            logger.LogInformation("Making request to Binance API for BTC price...");
+            string url = "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT";
+            var response = await client.GetStringAsync(url);
+            dynamic data = JsonConvert.DeserializeObject(response);
 
-        return data.price;
+            logger.LogInformation($"Binance response received for BTC price: {response}");
+            return data.price;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to fetch BTC price from Binance");
+            throw;
+        }
     }
 
-    static async Task<decimal> GetPreviousPriceFromBinance()
+    static async Task<decimal> GetPreviousPriceFromBinance(ILogger logger) // Acepta _logger como parámetro
     {
-        string url = "https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=2";
-        var response = await client.GetStringAsync(url);
-        dynamic data = JsonConvert.DeserializeObject(response);
+        try
+        {
+            logger.LogInformation("Making request to Binance API for previous BTC price...");
+            string url = "https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=2";
+            var response = await client.GetStringAsync(url);
+            dynamic data = JsonConvert.DeserializeObject(response);
 
-        return data[0][4]; // Índice 4 = precio de cierre
+            logger.LogInformation($"Binance response received for previous BTC price: {response}");
+            return data[0][4]; // Índice 4 = precio de cierre
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to fetch previous BTC price from Binance");
+            throw;
+        }
     }
 
-    static async Task SendTelegramMessage(string message)
+    static async Task SendTelegramMessage(ILogger logger, string message) // Acepta _logger como parámetro
     {
-        var botClient = new TelegramBotClient(TelegramToken);
-        await botClient.SendMessage(ChatIdG, message);
-        await botClient.SendMessage(ChatIdR, message);
+        try
+        {
+            logger.LogInformation("Sending Telegram message...");
+            var botClient = new TelegramBotClient(TelegramToken);
+            await botClient.SendMessage(ChatIdG, message);
+            //await botClient.SendMessage(ChatIdR, message);
+
+            logger.LogInformation("Telegram message sent successfully");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to send Telegram message");
+            throw;
+        }
     }
 }
