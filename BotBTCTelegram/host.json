@@ -10,5 +10,11 @@
       "Function": "Debug",
       "Default": "Information"
     }
+  },
+  "extensions": {
+    "timers": {
+      "maxConcurrentCalls": 10,
+      "batchSize": 1
+    }
   }
 }

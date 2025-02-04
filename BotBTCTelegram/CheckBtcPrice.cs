@@ -9,8 +9,11 @@ using Telegram.Bot;
 public class CheckBtcPrice
 {
     private static readonly HttpClient client = new HttpClient();
-    private static readonly string TelegramToken = "8093848208:AAFBtwula2g4IoxGgBrihJ0-rrkGiSGEpDM";
-    private static readonly string ChatIdG = "5847624767";
+    //private static readonly string TelegramToken = "8093848208:AAFBtwula2g4IoxGgBrihJ0-rrkGiSGEpDM";
+    //private static readonly string ChatIdG = "5847624767";
+    public static string TelegramToken = Environment.GetEnvironmentVariable("TelegramToken");
+    public static string ChatIdG = Environment.GetEnvironmentVariable("ChatIdG");
+
     //private static readonly string ChatIdR = "7275568176";
     private readonly ILogger _logger;
 
