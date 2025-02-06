@@ -9,9 +9,8 @@ using Telegram.Bot;
 public class CheckBtcPrice
 {
     private static readonly HttpClient client = new HttpClient();
-    private static readonly string TelegramToken = "8093848208:AAFBtwula2g4IoxGgBrihJ0-rrkGiSGEpDM";
-    private static readonly string ChatIdG = "5847624767";
-    //private static readonly string ChatIdR = "7275568176";
+    private static readonly string TelegramToken = "80954324848208:AAFBtwula2g4IoxGgBrihJ0-rrkGiSGEpDM";
+    private static readonly string ChatIdG = "58476247432427";
     private readonly ILogger _logger;
 
     public CheckBtcPrice(ILogger<CheckBtcPrice> logger)
@@ -27,14 +26,13 @@ public class CheckBtcPrice
         try
         {
             _logger.LogInformation("Starting to fetch BTC current price...");
-            decimal currentPrice = await GetBtcPrice(_logger); // Pasar _logger aquí
+            decimal currentPrice = await GetBtcPrice(_logger); 
             _logger.LogInformation($"Current BTC price fetched: {currentPrice} USD");
 
             _logger.LogInformation("Starting to fetch the previous BTC price...");
-            decimal previousPrice = await GetPreviousPriceFromBinance(_logger); // Pasar _logger aquí
+            decimal previousPrice = await GetPreviousPriceFromBinance(_logger); 
             _logger.LogInformation($"Previous BTC price fetched: {previousPrice} USD");
 
-            // Compara los precios y envía el mensaje si son diferentes
             if (currentPrice != previousPrice)
             {
                 _logger.LogInformation("BTC price changed, sending Telegram message...");
@@ -52,7 +50,7 @@ public class CheckBtcPrice
         }
     }
 
-    static async Task<decimal> GetBtcPrice(ILogger logger) // Acepta _logger como parámetro
+    static async Task<decimal> GetBtcPrice(ILogger logger) 
     {
         try
         {
@@ -71,7 +69,7 @@ public class CheckBtcPrice
         }
     }
 
-    static async Task<decimal> GetPreviousPriceFromBinance(ILogger logger) // Acepta _logger como parámetro
+    static async Task<decimal> GetPreviousPriceFromBinance(ILogger logger) 
     {
         try
         {
@@ -90,21 +88,19 @@ public class CheckBtcPrice
         }
     }
 
-    static async Task SendTelegramMessage(ILogger logger, string message) // Acepta _logger como parámetro
+    static async Task SendTelegramMessage(ILogger logger, string message)
     {
         try
         {
             logger.LogInformation("Preparing to send Telegram message...");
             var botClient = new TelegramBotClient(TelegramToken);
 
-            // Verificar que la variable TelegramBotToken no sea nula o vacía
             if (string.IsNullOrEmpty(TelegramToken))
             {
                 logger.LogError("Telegram Bot Token is null or empty. Cannot send message.");
                 return;
             }
 
-            // Verificar que el chat ID no sea nulo
             if (string.IsNullOrEmpty(ChatIdG))
             {
                 logger.LogError("Chat ID is null or empty. Cannot send message.");
@@ -114,7 +110,6 @@ public class CheckBtcPrice
             logger.LogInformation("Sending Telegram message...");
             var sendResponse = await botClient.SendMessage(ChatIdG, message);
 
-            // Verificar si el mensaje fue enviado correctamente
             if (sendResponse != null && sendResponse.MessageId != 0)
             {
                 logger.LogInformation("Telegram message sent successfully");
